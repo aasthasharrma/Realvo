@@ -17,9 +17,10 @@ document.querySelector("#style-1 > div:nth-child(2) > table > tbody")
     csvContent += `${date},${billionsValue}\n`;
   });
 
-const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-const link = document.createElement("a");
-link.href = URL.createObjectURL(blob);
-link.download = "SPG_assets.csv";
-link.click();
-URL.revokeObjectURL(link.href);
+// This approach allows you to trigger a download immediately without having to add the link to the DOM
+const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }); // blod is created from the csv content
+const link = document.createElement("a"); // <a> (anchor) element is dynamically created
+link.href = URL.createObjectURL(blob); // creates a temporary url that points to the blob's data
+link.download = "SPG_assets.csv"; // specifies the name of the file to be downloaded
+link.click(); // programmatically simulate a click on the anchor element, which starts the download process
+URL.revokeObjectURL(link.href); // revokes the temporary URL, freeing up memory
