@@ -1,16 +1,17 @@
 // This code is to be pasted in the browser console on the following URL
-// https://www.macrotrends.net/stocks/charts/SPG/simon-property/total-assets
+// https://www.macrotrends.net/stocks/charts/SPG/simon-property/operating-income
 // Or any other total-assets page on macrotrends.net
 
-let csvContent = "date,assets\n";
+let csvContent = "date,NOI\n";
 
-document.querySelector("#style-1 > div:nth-child(2) > table > tbody")
+document.querySelector("#style-1 > div:nth-child(2) > table")
   .querySelectorAll("tr")
-  .forEach((row) => {
+  .forEach((row, index) => {
+    if(index === 0) return; // for some reason on this page specifically row[0] is a header row, so we skip it
+
     const date = row.cells[0].textContent.trim();
     const rawAmount = row.cells[1].textContent.trim();
 
-    // number parsing, normalizing format
     const millionsValue = parseFloat(rawAmount.replace('$', '').replace(',', ''));
     const billionsValue = (millionsValue / 1000).toFixed(4);
     
@@ -21,6 +22,6 @@ document.querySelector("#style-1 > div:nth-child(2) > table > tbody")
 const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }); // blob is created from the csv content
 const link = document.createElement("a"); // <a> (anchor) element is dynamically created
 link.href = URL.createObjectURL(blob); // creates a temporary url that points to the blob's data
-link.download = "SPG_assets.csv"; // specifies the name of the file to be downloaded
+link.download = "SPG_NOI.csv"; // specifies the name of the file to be downloaded
 link.click(); // programmatically simulate a click on the anchor element, which starts the download process
 URL.revokeObjectURL(link.href); // revokes the temporary URL, freeing up memory
