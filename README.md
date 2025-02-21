@@ -17,7 +17,7 @@ pip install -r requirements.txt
 
 ## Generate mock data
 ```py
-python3 generate_mock_data.py
+python3 generate_data.py
 ```
 
 ## Train the model
