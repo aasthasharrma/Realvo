@@ -25,8 +25,11 @@ for _, row in df.iterrows():
 # Convert the list into a DataFrame
 expanded_df = pd.DataFrame(expanded_rows)
 
-# Drop the old 'Period' and 'Month' columns
-expanded_df = expanded_df.drop(columns=['Period', 'Month'])
+# Drop unnecessary columns (e.g., 'Period', 'Month', 'Label', etc.)
+expanded_df = expanded_df.drop(columns=['Period', 'Month', 'Label', 'Series ID', 'Year'])  # Adjust columns to drop as needed
+
+# Rename 'Value' column to 'CPI'
+expanded_df = expanded_df.rename(columns={'Value': 'CPI'})
 
 # Convert 'date_idx' to datetime format
 expanded_df['date_idx'] = pd.to_datetime(expanded_df['date_idx'])
@@ -41,4 +44,3 @@ expanded_df['date_idx'] = (expanded_df['date_idx'] - start_date).dt.days + 1
 expanded_df.to_csv("CPI_cleaned.csv", index=False)
 
 print("CSV file expanded: Dates indexed sequentially from Jan 1, 2014!")
-
