@@ -48,3 +48,30 @@ async function validateMacrotrendsSlug(ticker, standardizedName) {
 		return false;
 	}
 }
+
+/** 
+ * Given a ticker and a full slug from Yahoo Finance, iteratively try shorter slugs
+ * until a valid Macrotrends URL is found. For example, if the full slug is
+ * "simon-property-group", we’ll try:
+ *   "simon-property-group" -> if not valid, then "simon-property" -> if not, then "simon".
+ *
+ * @param {string} ticker - The stock ticker symbol.
+ * @param {string} standardizedName - The full slug generated from the company name.
+ * @returns {Promise<string|null>} A validStandardizedName if found; otherwise, null.
+ */
+async function getValidMacrotrendsSlug(ticker, standardizedName) {
+	// Split the full slug into words.
+	const words = standardizedName.split('-');
+	// Try from the full slug down to one word
+	for (let i = words.length; i >= 1; i--) {
+		const testStandardizedName = words.slice(0, i).join('-');
+		if (await validateMacrotrendsSlug(ticker, testStandardizedName)) {
+			console.log(`Valid standardized name found for ${ticker}: ${testStandardizedName}`);
+			return testStandardizedName;
+		} else {
+			console.log(`Standardized name ${testStandardizedName} is not valid for ${ticker}.`);
+		}
+	}
+	console.error(`No standardized name found for ${ticker} using ${standardizedName}`);
+	return null;
+}
