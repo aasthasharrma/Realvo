@@ -117,3 +117,18 @@ async function findTickerNameFromYahoo(ticker) {
 		return null;
 	}
 }
+
+/**
+ * Processes a list of tickers to find their corresponding valid slugs (ticker names) for Macrotrends.
+ *
+ * @param {string[]} tickerList - Array of ticker symbols.
+ * @returns {Promise<Object>} An object mapping tickers to their valid slugs.
+ */
+async function findTickerNames(tickerList) {
+	const result = {};
+	for (const ticker of tickerList) {
+		const slug = await findTickerNameFromYahoo(ticker);
+		result[ticker] = slug;
+	}
+	return result;
+}
