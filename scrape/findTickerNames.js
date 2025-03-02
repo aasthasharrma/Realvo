@@ -20,3 +20,31 @@ function companySlugToName(companySlug) { // why did i even write this function?
 		.trim() // Remove leading/trailing spaces.
 		.replace(/\s+/g, '-'); // Replace spaces with hyphens.
 }
+
+/**
+ * Validates whether a Macrotrends URL exists by sending a HEAD request.
+ * The URL pattern is:
+ *   https://www.macrotrends.net/stocks/charts/{ticker}/{slug}/market-cap
+ *
+ * @param {string} ticker - The stock ticker symbol.
+ * @param {string} standardizedName - The standardizedName to test.
+ * @returns {Promise<boolean>} True if the URL exists (response.ok), false otherwise.
+ */
+async function validateMacrotrendsSlug(ticker, standardizedName) {
+	const url = `https://www.macrotrends.net/stocks/charts/${ticker}/${standardizedName}/market-cap`;
+	try {
+		// Send a HEAD request to check if the URL exists.
+		const response = await fetch(url, {
+			method: 'HEAD',
+			headers: {
+				'User-Agent': USER_AGENT
+			}
+		});
+		// Log the status of the response. does the url exist?
+		console.log(`Testing URL: ${url} - Status: ${response.status}`);
+		return response.ok;
+	} catch (err) {
+		console.error(`Error validating URL ${url}:`, err);
+		return false;
+	}
+}
