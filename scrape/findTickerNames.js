@@ -75,3 +75,45 @@ async function getValidMacrotrendsSlug(ticker, standardizedName) {
 	console.error(`No standardized name found for ${ticker} using ${standardizedName}`);
 	return null;
 }
+
+/**
+ * Uses Yahoo Finance to fetch the company’s short name for a ticker, converts it into a slug,
+ * and then finds the valid Macrotrends slug by trimming the full slug as needed. 
+ * "simon-property-group", we’ll try:
+ *   "simon-property-group" -> if not valid, then "simon-property" -> if not, then "simon".
+ *
+ * @param {string} ticker - The stock ticker symbol.
+ * @returns {Promise<string|null>} A validName for Macrotrends, or null if not found.
+ */
+async function findTickerNameFromYahoo(ticker) {
+	const url = `https://query1.finance.yahoo.com/v1/finance/search?q=${ticker}`;
+	console.log(`Fetching Yahoo Finance data for ${ticker}...`);
+	try {
+		// Fetch data from Yahoo Finance.
+		const response = await fetch(url, {
+			headers: {
+				'User-Agent': USER_AGENT
+			}
+		});
+		// Parse the JSON response.
+		const json = await response.json();
+		if (json.quotes && json.quotes.length > 0) {
+			const quote = json.quotes[0];
+			if (!quote.shortname) {
+				console.error(`No company name found for ${ticker} from Yahoo Finance.`);
+				return null;
+			}
+			// Convert the company name into a slug. we do this
+			const standardizedName = companySlugToName(quote.shortname);
+			console.log(`standardizedName from Yahoo for ${ticker}: ${standardizedName}`);
+			const validName = await getValidMacrotrendsSlug(ticker, standardizedName);
+			return validName;
+		} else {
+			console.error(`No quotes found for ${ticker}`);
+			return null;
+		}
+	} catch (err) {
+		console.error(`Error fetching Yahoo Finance data for ${ticker}:`, err);
+		return null;
+	}
+}
