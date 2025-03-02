@@ -132,3 +132,10 @@ async function findTickerNames(tickerList) {
 	}
 	return result;
 }
+
+(async () => {
+	// find the valid ticker names.
+	const result = await findTickerNames(tickers);
+	console.log('Result:', result);
+})();
+
