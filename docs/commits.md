@@ -1,3 +1,7 @@
+# Commits
+
+This repo uses [semantic-release](https://github.com/semantic-release/semantic-release) and [angular style commits](https://github.com/angular/angular/blob/68a6a07/CONTRIBUTING.md#commit).
+
 |build|no release|
 |ci|no release|
 |docs|no release|

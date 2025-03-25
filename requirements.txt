@@ -1,3 +1,5 @@
+yfinance
+requests
 numpy
 pandas
 pytorch-forecasting

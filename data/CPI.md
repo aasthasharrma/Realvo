@@ -1,0 +1,1 @@
+### to get csv data go to https://data.bls.gov/dataViewer/view/timeseries/APU0000708111 then click csv :) 
