@@ -1,2 +1,7 @@
 yfinance
 requests
+numpy
+pandas
+pytorch-forecasting
+pytorch-lightning
+lightning
