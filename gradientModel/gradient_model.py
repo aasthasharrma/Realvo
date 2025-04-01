@@ -9,33 +9,7 @@ from sklearn.preprocessing import StandardScaler
 # ------------------------------
 # 1. Generate Mock Data
 # ------------------------------
-np.random.seed(42)
-
-# Simulate features
-n_samples = 1000
-data = {
-    "Interest_Rate": np.random.uniform(1.5, 5.5, n_samples),     # Interest rates between 1.5% and 5.5%
-    "Inflation": np.random.uniform(1.0, 4.0, n_samples),          # Inflation rates between 1% and 4%
-    "GDP_Growth": np.random.uniform(-2, 5, n_samples),            # GDP growth between -2% and 5%
-    "Debt_to_Equity": np.random.uniform(0.5, 2.5, n_samples),     # Debt-to-equity ratio
-    "Dividend_Yield": np.random.uniform(2.0, 8.0, n_samples),     # Dividend yield between 2% and 8%
-    "Occupancy_Rate": np.random.uniform(60, 100, n_samples)       # Occupancy rate between 60% and 100%
-}
-
-# Create DataFrame
-df = pd.DataFrame(data)
-
-# Add a continuous target for regression
-df["REIT_Returns"] = (
-    0.02 * df["Interest_Rate"] - 
-    0.01 * df["Inflation"] + 
-    0.03 * df["GDP_Growth"] + 
-    0.01 * df["Dividend_Yield"] + 
-    np.random.normal(0, 0.5, n_samples)
-)
-
-# Add a categorical target for classification
-df["REIT_Label"] = np.where(df["REIT_Returns"] > df["REIT_Returns"].median(), 1, 0)
+df = pd.read_csv("../scrape/SPG/SPG_merged.csv")
 
 # ------------------------------
 # 2. Regression Model (Continuous Target)
