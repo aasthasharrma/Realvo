@@ -49,6 +49,9 @@ merged_df['date_idx'] = (merged_df['date'] - start_date).dt.days + 1
 # Drop the old 'date' column
 merged_df.drop(columns=['date'], inplace=True)
 
+# Add REIT_Return column (as net_income / total_shareholder_equity)
+merged_df["REIT_Return"] = merged_df["netincome"] / merged_df["totalshareholderequity"]
+
 # Save the modified CSV
 merged_df.to_csv("SPG_merged.csv", index=False)
 
