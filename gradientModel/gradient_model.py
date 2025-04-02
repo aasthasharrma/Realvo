@@ -11,12 +11,15 @@ from sklearn.preprocessing import StandardScaler
 # ------------------------------
 df = pd.read_csv("../scrape/SPG/SPG_merged.csv")
 
+# Create REIT_Label column based on whether return is above the median
+df["REIT_Label"] = (df["REIT_Return"] > df["REIT_Return"].median()).astype(int)
+
 # ------------------------------
 # 2. Regression Model (Continuous Target)
 # ------------------------------
 # Separate features and target
-X = df.drop(columns=["REIT_Returns", "REIT_Label"])
-y_reg = df["REIT_Returns"]
+X = df.drop(columns=["REIT_Return", "REIT_Label"])
+y_reg = df["REIT_Return"]
 
 # Split the data
 X_train, X_test, y_train, y_test = train_test_split(X, y_reg, test_size=0.2, random_state=42)
