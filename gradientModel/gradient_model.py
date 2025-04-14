@@ -10,7 +10,8 @@ from sklearn.impute import SimpleImputer
 # ------------------------------
 # 1. Load and Prepare Data
 # ------------------------------
-df = pd.read_csv("../scrape/SPG/SPG_merged.csv")
+train_df = pd.read_csv("../scrape/SPG/SPG_merged.csv")
+test_df = pd.read_csv("../scrape/INVH/")
 
 # First, let's check what columns we actually have
 print("Available columns in the DataFrame:", df.columns.tolist())
@@ -38,7 +39,7 @@ df[numeric_cols] = imputer.fit_transform(df[numeric_cols])
 X = df[numeric_cols].drop(columns=["REIT_Return", "REIT_Label"])
 y_reg = df["REIT_Return"]
 
-# Split the data
+# Split the data -- CAUSING THE PROBLEM!!!
 X_train, X_test, y_train, y_test = train_test_split(X, y_reg, test_size=0.2, random_state=42)
 
 # Standardize the data
