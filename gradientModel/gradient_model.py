@@ -7,119 +7,116 @@ from sklearn.metrics import mean_squared_error, accuracy_score, classification_r
 from sklearn.preprocessing import StandardScaler
 from sklearn.impute import SimpleImputer
 
-# ------------------------------
-# 1. Load and Prepare Data
-# ------------------------------
+# ----------------------------------------
+# 1. Load Data
+# ----------------------------------------
 train_df = pd.read_csv("../scrape/SPG/SPG_merged.csv")
-test_df = pd.read_csv("../scrape/INVH/")
+test_df = pd.read_csv("../scrape/INVH/INVH_merged.csv")
 
-# First, let's check what columns we actually have
-print("Available columns in the DataFrame:", df.columns.tolist())
-print("\nMissing values per column:")
-print(df.isnull().sum())
+print("Train Columns:", train_df.columns.tolist())
+print("Test Columns:", test_df.columns.tolist())
 
-# Create REIT_Label column based on whether return is above the median
-df["REIT_Label"] = (df["REIT_Return"] > df["REIT_Return"].median()).astype(int)
+print("\nTrain Missing Values:\n", train_df.isnull().sum())
 
-# ------------------------------
-# 2. Handle Missing Values
-# ------------------------------
-# Option 1: Drop rows with missing values
-# df = df.dropna()
+# ----------------------------------------
+# 2. Preprocessing
+# ----------------------------------------
 
-# Option 2: Impute missing values (better)
-imputer = SimpleImputer(strategy='mean')  # can also use 'median' or 'most_frequent'
-numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
-df[numeric_cols] = imputer.fit_transform(df[numeric_cols])
+# Numeric Columns (Exclude REIT_Return since it's the target)
+numeric_cols = [col for col in train_df.select_dtypes(include=[np.number]).columns if col != "REIT_Return"]
 
-# ------------------------------
-# 3. Regression Model (Continuous Target)
-# ------------------------------
-# Separate features and target - use only numeric columns
-X = df[numeric_cols].drop(columns=["REIT_Return", "REIT_Label"])
-y_reg = df["REIT_Return"]
+# Impute Missing
+imputer = SimpleImputer(strategy='mean')
+train_df[numeric_cols] = imputer.fit_transform(train_df[numeric_cols])
+test_df[numeric_cols] = imputer.transform(test_df[numeric_cols])
 
-# Split the data -- CAUSING THE PROBLEM!!!
-X_train, X_test, y_train, y_test = train_test_split(X, y_reg, test_size=0.2, random_state=42)
+# Classification Label based on train median
+median_return = train_df["REIT_Return"].median()
+train_df["REIT_Label"] = (train_df["REIT_Return"] > median_return).astype(int)
 
-# Standardize the data
+if "REIT_Return" in test_df.columns:
+    test_df["REIT_Label"] = (test_df["REIT_Return"] > median_return).astype(int)
+
+# ----------------------------------------
+# 3. Regression Model (Predict REIT_Return)
+# ----------------------------------------
+X_train_reg = train_df[numeric_cols]
+y_train_reg = train_df["REIT_Return"]
+
+X_test_reg = test_df[numeric_cols]
+
 scaler = StandardScaler()
-X_train_scaled = scaler.fit_transform(X_train)
-X_test_scaled = scaler.transform(X_test)
+X_train_reg_scaled = scaler.fit_transform(X_train_reg)
+X_test_reg_scaled = scaler.transform(X_test_reg)
 
-# Train the Gradient Boosting model (for regression)
-gb_regressor = GradientBoostingRegressor(n_estimators=100, learning_rate=0.1, max_depth=3, random_state=42)
-gb_regressor.fit(X_train_scaled, y_train)
+regressor = GradientBoostingRegressor(n_estimators=100, learning_rate=0.1, max_depth=3, random_state=42)
+regressor.fit(X_train_reg_scaled, y_train_reg)
 
-# Predict on the test set
-y_pred_reg = gb_regressor.predict(X_test_scaled)
+y_pred_reg = regressor.predict(X_test_reg_scaled)
 
-# Evaluate model performance
-mse = mean_squared_error(y_test, y_pred_reg)
-print("\n--- Regression Results ---")
-print(f"Mean Squared Error: {mse:.4f}")
+# Only Evaluate MSE if REIT_Return exists
+if "REIT_Return" in test_df.columns:
+    y_test_reg = test_df["REIT_Return"]
+    print("\n--- Regression Results ---")
+    print(f"Mean Squared Error: {mean_squared_error(y_test_reg, y_pred_reg):.4f}")
 
-# Plot feature importance
-feature_importance = gb_regressor.feature_importances_
-importance_df = pd.DataFrame({"Feature": X.columns, "Importance": feature_importance})
-importance_df = importance_df.sort_values(by="Importance", ascending=False)
-
-plt.figure(figsize=(10, 5))
-plt.barh(importance_df["Feature"], importance_df["Importance"])
-plt.xlabel("Importance")
-plt.ylabel("Feature")
-plt.title("Feature Importance in Gradient Boosting Regressor")
-plt.tight_layout()
-plt.show()
-
-# ------------------------------
-# 4. Plot Actual vs Predicted
-# ------------------------------
+# Plot Predictions
 plt.figure(figsize=(12, 6))
-plt.scatter(y_test, y_pred_reg, alpha=0.5)
-plt.plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], 'k--', lw=2)
-plt.xlabel('Actual Returns')
-plt.ylabel('Predicted Returns')
-plt.title('Actual vs Predicted REIT Returns')
+plt.scatter(range(len(y_pred_reg)), y_pred_reg, alpha=0.5)
+plt.xlabel('Sample')
+plt.ylabel('Predicted Return')
+plt.title('Predicted REIT Returns (INVH)')
 plt.grid(True)
 plt.tight_layout()
 plt.show()
 
-# ------------------------------
-# 5. Classification Model (Categorical Target)
-# ------------------------------
-# Use the categorical label as the target
-y_class = df["REIT_Label"]
-
-# Split the data (using same split as regression for consistency)
-X_train, X_test, y_train, y_test = train_test_split(X, y_class, test_size=0.2, random_state=42)
-
-# Standardize the data
-X_train_scaled = scaler.fit_transform(X_train)
-X_test_scaled = scaler.transform(X_test)
-
-# Train the Gradient Boosting model (for classification)
-gb_classifier = GradientBoostingClassifier(n_estimators=100, learning_rate=0.1, max_depth=3, random_state=42)
-gb_classifier.fit(X_train_scaled, y_train)
-
-# Predict on the test set
-y_pred_class = gb_classifier.predict(X_test_scaled)
-
-# Evaluate model performance
-accuracy = accuracy_score(y_test, y_pred_class)
-print("\n--- Classification Results ---")
-print(f"Accuracy: {accuracy * 100:.2f}%")
-print(classification_report(y_test, y_pred_class))
-
-# Plot feature importance
-feature_importance = gb_classifier.feature_importances_
-importance_df = pd.DataFrame({"Feature": X.columns, "Importance": feature_importance})
-importance_df = importance_df.sort_values(by="Importance", ascending=False)
+# Feature Importance
+importance_df = pd.DataFrame({
+    "Feature": X_train_reg.columns,
+    "Importance": regressor.feature_importances_
+}).sort_values(by="Importance", ascending=False)
 
 plt.figure(figsize=(10, 5))
 plt.barh(importance_df["Feature"], importance_df["Importance"])
 plt.xlabel("Importance")
 plt.ylabel("Feature")
-plt.title("Feature Importance in Gradient Boosting Classifier")
+plt.title("Feature Importance (Regressor)")
+plt.tight_layout()
+plt.show()
+
+# ----------------------------------------
+# 4. Classification Model (Predict REIT_Label)
+# ----------------------------------------
+X_train_class = X_train_reg
+y_train_class = train_df["REIT_Label"]
+
+X_test_class = X_test_reg
+
+X_train_class_scaled = scaler.fit_transform(X_train_class)
+X_test_class_scaled = scaler.transform(X_test_class)
+
+classifier = GradientBoostingClassifier(n_estimators=100, learning_rate=0.1, max_depth=3, random_state=42)
+classifier.fit(X_train_class_scaled, y_train_class)
+
+y_pred_class = classifier.predict(X_test_class_scaled)
+
+# Only Evaluate if REIT_Return exists
+if "REIT_Label" in test_df.columns:
+    y_test_class = test_df["REIT_Label"]
+    print("\n--- Classification Results ---")
+    print(f"Accuracy: {accuracy_score(y_test_class, y_pred_class) * 100:.2f}%")
+    print(classification_report(y_test_class, y_pred_class))
+
+# Feature Importance
+importance_df = pd.DataFrame({
+    "Feature": X_train_class.columns,
+    "Importance": classifier.feature_importances_
+}).sort_values(by="Importance", ascending=False)
+
+plt.figure(figsize=(10, 5))
+plt.barh(importance_df["Feature"], importance_df["Importance"])
+plt.xlabel("Importance")
+plt.ylabel("Feature")
+plt.title("Feature Importance (Classifier)")
 plt.tight_layout()
 plt.show()
