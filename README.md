@@ -1,5 +1,5 @@
 # Realvo
-REIT Forecasting Model Leveraging Blockchain - ACM Research Spring 2025
+REIT Forecasting Model - ACM Research Spring 2025
 
 ## Installation
 Setup new virtual environment
