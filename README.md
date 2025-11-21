@@ -1,4 +1,4 @@
-# Realvo
+# Realvo Research Project
 REIT Forecasting Model Leveraging Blockchain - ACM Research Spring 2025
 
 ## Installation
